@@ -14,13 +14,10 @@ namespace T3dotnet
         private static Point BoardEnd { get; set; }
         #endregion
 
-
-
         public T3Application()
         {
             // Console settings
             Console.CursorSize = 90;
-
         }
 
         public static void Main(string[] args)
@@ -37,49 +34,54 @@ namespace T3dotnet
 
             // Initialize Game
             var board = new T3Board(3);
-            var winner = string.Empty;
             var players = new Player[2] {
-                new Player(CellValues.X),
-                new Player(CellValues.O),
+                new Player(TileValues.X),
+                new AIPlayer(TileValues.O),
             };
-            foreach (var player in players)
-            {
-                player.OnNavigated += (object sender, Player.PlayerNavigationEventArgs e) =>
-                {
+            var currentPlayer = players[0];
+            var winner = string.Empty;
+            
+            foreach(var player in players) {
+                if(player is AIPlayer) continue;
+                player.OnNavigated += (object sender, Player.PlayerNavigationEventArgs e) => {
                     Console.SetCursorPosition(BoardOrigin.X + e.GridCoordinates.X * 2, BoardOrigin.Y + e.GridCoordinates.Y);
                 };
             }
+            board.OnTileMarked += (object sender, T3Board.WriteTileEvent e) =>
+            {
+                var t3_board = sender as T3Board;
+                var x = e.TileIndex % t3_board.Resolution;
+                var y = e.TileIndex / t3_board.Resolution;
+                Console.SetCursorPosition(BoardOrigin.X + x * 2, BoardOrigin.Y + y);
+            };
 
             // Game loop
             do
             {
-                foreach (var player in players)
+                DisplayConsoleHelper.WriteAtPosition(PlayerLabelPosition, currentPlayer.Label + " plays");
+
+                int index = -1;
+                // Let player pick a tile until one is valid
+                do
                 {
-                    DisplayConsoleHelper.WriteAtPosition(PlayerLabelPosition, player.Label + " plays");
+                    index = currentPlayer.PlayTurn(board);
+                } while (board.SetValue(index, currentPlayer.Symbol) == 0);
 
-                    int index = -1;
-                    // Let player pick a tile until one is valid
-                    do
-                    {
-                        index = player.PlayTurn(board);
-                    } while (board.SetValue(index, player.Symbol) == 0);
+                MarkTile(currentPlayer.Label);
 
-                    MarkTile(player.Label);
-
-                    // Check victory conditions
-                    if (board.CheckWinConditions(index, player.Symbol)) {
-                        winner = player.Label;
-                        break;
-                    }
-                }
-            } while (winner.Equals(string.Empty) && board.FreeCellCount > 0);
+                // Check victory conditions
+                if (board.CheckWinConditions(index, currentPlayer.Symbol))
+                    winner = currentPlayer.Label;
+                else
+                    currentPlayer = currentPlayer == players[0] ? players[1] : players[0];
+            } while (winner.Equals(string.Empty) && !board.IsBoardFull);
 
             // Game resolution
             if (winner.Equals(string.Empty))
                 DisplayConsoleHelper.WriteAtPosition(MessageBoxPosition, "Draw");
             else
             {
-                DisplayConsoleHelper.WriteAtPosition(MessageBoxPosition, "And the winner is... : " + winner + " !");
+                DisplayConsoleHelper.WriteAtPosition(MessageBoxPosition, "And the winner is... " + winner + " !");
                 SoundManager.Win();
             }
 
@@ -126,13 +128,6 @@ namespace T3dotnet
             Console.Beep(300, 150);
         }
 
-        public static bool RunApp(params object[] args)
-        {
-            var count = (int)args[0];
-            if (count < 1) return true;
-            return false;
-        }
-
         private static void DrawBoard(int resolution)
         {
             Console.SetCursorPosition(BoardOrigin.X, BoardOrigin.Y);
@@ -148,21 +143,5 @@ namespace T3dotnet
 
             Console.WriteLine();
         }
-        #region Helpers
-
-
-        private static int GetIndexFromPosition(int x, int y)
-        {
-            var resolution = (BoardEnd.Y - BoardOrigin.Y + 1);
-            return x / 2 + y * resolution;
-        }
-
-        private static int GetIndexFromPosition(Point position)
-        {
-            return GetIndexFromPosition(position.X, position.Y);
-        }
-
-
-        #endregion
     }
 }
