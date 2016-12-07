@@ -29,7 +29,7 @@ namespace T3dotnet
         }
 
         private int ChooseTile_Easy(T3Board board) {
-            return _rnd.Next(0, board.Grid.Length-1);
+            return _rnd.Next(0, board.Grid.Length);
         }
 
         private int ChooseTile_Medium(T3Board board) {
