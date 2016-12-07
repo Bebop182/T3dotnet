@@ -22,10 +22,12 @@ namespace T3dotnet
                 OnNavigated.Invoke(this, new PlayerNavigationEventArgs(navigationOffset));
         }
 
+        public string Label {get; set;}
         public CellValues Symbol { get; set; }
         public Player(CellValues symbol)
         {
             Symbol = symbol;
+            Label = Enum.GetName(typeof(CellValues), symbol);
         }
 
         public int PlayTurn(T3Board board)

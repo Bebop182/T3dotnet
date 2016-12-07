@@ -38,7 +38,6 @@ namespace T3dotnet
             // Initialize Game
             var board = new T3Board(3);
             var winner = string.Empty;
-            string currentPlayerSymbol;
             var players = new Player[2] {
                 new Player(CellValues.X),
                 new Player(CellValues.O),
@@ -54,45 +53,22 @@ namespace T3dotnet
             // Game loop
             do
             {
-                // currentPlayerSymbol = Enum.GetName(typeof(CellValues), board.CurrentPlayer);
-                // DisplayConsoleHelper.WriteAtPosition(PlayerLabelPosition, currentPlayerSymbol + " plays");
-
-                // // Player select cell
-                // var playIndex = SelectTile();
-                // var cellValue = board.SetValue(playIndex);
-
-                // if (cellValue == 0) continue;
-
-                // // Write to cell
-                // MarkTile(currentPlayerSymbol);
-
-                // // Check victory conditions
-                // if (board.CheckWinConditions(playIndex))
-                //     winner = currentPlayerSymbol;
-                // else
-                //     board.NextPlayer();
                 foreach (var player in players)
                 {
-                    currentPlayerSymbol = Enum.GetName(typeof(CellValues), player.Symbol);
-                    DisplayConsoleHelper.WriteAtPosition(PlayerLabelPosition, currentPlayerSymbol + " plays");
+                    DisplayConsoleHelper.WriteAtPosition(PlayerLabelPosition, player.Label + " plays");
 
                     int index = -1;
-                    int boardResult = -1;
                     // Let player pick a tile until one is valid
                     do
                     {
                         index = player.PlayTurn(board);
-                        boardResult = board.SetValue(index, player.Symbol);
-                        //DisplayConsoleHelper.WriteAtPosition(PlayerLabelPosition, currentPlayerSymbol + " plays :" + index + " ; result :" + boardResult);
+                    } while (board.SetValue(index, player.Symbol) == 0);
 
-                    } while (boardResult == 0);
-
-                    MarkTile(currentPlayerSymbol);
-                    // MarkTile(index.ToString());
+                    MarkTile(player.Label);
 
                     // Check victory conditions
-                    if (board.CheckWinConditions(index)) {
-                        winner = currentPlayerSymbol;
+                    if (board.CheckWinConditions(index, player.Symbol)) {
+                        winner = player.Label;
                         break;
                     }
                 }
@@ -140,48 +116,6 @@ namespace T3dotnet
             // Footer
             FooterPosition = DisplayConsoleHelper.GetCursorPosition();
             Console.WriteLine();
-        }
-
-        private static int SelectTile()
-        {
-            // Reset cusor position for navigation (middle)
-            Console.SetCursorPosition(BoardOrigin.X + 2, BoardOrigin.Y + 1);
-
-            // Navigation using arrow keys
-            ConsoleKey key;
-            bool endTurn;
-            do
-            {
-                endTurn = false;
-                DisplayConsoleHelper.Flush();
-                key = Console.ReadKey(true).Key;
-                var navOffset = new Point();
-
-                switch (key)
-                {
-                    case ConsoleKey.LeftArrow:
-                        navOffset.X--;
-                        break;
-                    case ConsoleKey.RightArrow:
-                        navOffset.X++;
-                        break;
-                    case ConsoleKey.UpArrow:
-                        navOffset.Y--;
-                        break;
-                    case ConsoleKey.DownArrow:
-                        navOffset.Y++;
-                        break;
-                    case ConsoleKey.Enter:
-                        endTurn = true;
-                        break;
-                }
-                Console.SetCursorPosition(
-                    DisplayConsoleHelper.Clamp(Console.CursorLeft + navOffset.X * 2, 0, BoardEnd.X - 1),
-                    DisplayConsoleHelper.Clamp(Console.CursorTop + navOffset.Y, BoardOrigin.Y, BoardEnd.Y));
-            }
-            while (!endTurn);
-            var index = GetIndexFromPosition(Console.CursorLeft, Console.CursorTop - BoardOrigin.Y);
-            return index;
         }
 
         private static void MarkTile(string symbol)
