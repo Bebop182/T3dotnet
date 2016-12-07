@@ -1,0 +1,8 @@
+# Generated content
+[Bb]in
+[Oo]bj
+*.lock.json
+
+# VS code settings
+.vscode
+
