@@ -24,6 +24,21 @@ namespace T3dotnet
             CurrentPlayer = CellValues.X;
         }
 
+        public int GetIndexFromCoordinates(Point coord) {
+            if(coord.X < 0 || coord.X >= Resolution) return -1;
+            if(coord.Y < 0 || coord.Y >= Resolution) return -1;
+            return coord.X + coord.Y * Resolution;
+        }
+
+        public bool AreValuesEquals(params int[] values) {
+            var equals = true;
+            for(int i=0; i<values.Length-1 ; i++) {
+                if(values[i] != values[i+1])
+                equals = false;
+            }
+            return equals;
+        }
+//todo: better victory condition check
         public int GetRowValue(int itemIndex)
         {
             int result = 0;
@@ -45,7 +60,7 @@ namespace T3dotnet
             return result;
         }
 
-        public int GetLeftDiagonal()
+        public int GetLeftDiagonalValue()
         {
             int result = 0;
             for (int i = 0; i < Grid.Length; i += Resolution + 1)
@@ -55,7 +70,7 @@ namespace T3dotnet
             return result;
         }
 
-        public int GetRightDiagonal()
+        public int GetRightDiagonalValue()
         {
             int result = 0;
             for (int i = Resolution - 1; i < Grid.Length; i += Resolution - 1)
@@ -65,10 +80,11 @@ namespace T3dotnet
             return result;
         }
 
-        public int SetValue(int index)
+        public int SetValue(int index, CellValues value)
         {
+            // if cell marked leave
             if (Grid[index] != CellValues.Empty) return 0;
-            Grid[index] = CurrentPlayer;
+            Grid[index] = value;
             FreeCellCount--;
             return (int)Grid[index];
         }
@@ -78,8 +94,8 @@ namespace T3dotnet
             var winValue = (int)CurrentPlayer * Resolution;
             if (GetRowValue(lastPlayIndex) == winValue) return true;
             if (GetColumnValue(lastPlayIndex) == winValue) return true;
-            if(GetLeftDiagonal() == winValue) return true;
-            if(GetRightDiagonal() == winValue) return true;
+            if(GetLeftDiagonalValue() == winValue) return true;
+            if(GetRightDiagonalValue() == winValue) return true;
             return false;
         }
 

@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace T3dotnet
 {
-    public class Program
+    public class T3Application
     {
         #region Cursor Positions
         private static Point TitlePosition { get; set; }
@@ -14,10 +14,13 @@ namespace T3dotnet
         private static Point BoardEnd { get; set; }
         #endregion
 
-        public Program()
+
+
+        public T3Application()
         {
             // Console settings
             Console.CursorSize = 90;
+
         }
 
         public static void Main(string[] args)
@@ -26,7 +29,7 @@ namespace T3dotnet
             InitializeLayout(3);
 
             // Display header
-            WriteAtPosition(TitlePosition, "-= TicTacToe by Bebop182 =-");
+            DisplayConsoleHelper.WriteAtPosition(TitlePosition, "-= TicTacToe by Bebop182 =-");
             SoundManager.Welcome();
 
             // Draw board
@@ -36,58 +39,94 @@ namespace T3dotnet
             var board = new T3Board(3);
             var winner = string.Empty;
             string currentPlayerSymbol;
+            var players = new Player[2] {
+                new Player(CellValues.X),
+                new Player(CellValues.O),
+            };
+            foreach (var player in players)
+            {
+                player.OnNavigated += (object sender, Player.PlayerNavigationEventArgs e) =>
+                {
+                    Console.SetCursorPosition(BoardOrigin.X + e.GridCoordinates.X * 2, BoardOrigin.Y + e.GridCoordinates.Y);
+                };
+            }
 
             // Game loop
             do
             {
-                currentPlayerSymbol = Enum.GetName(typeof(CellValues), board.CurrentPlayer);
-                WriteAtPosition(PlayerLabelPosition, currentPlayerSymbol + " plays");
+                // currentPlayerSymbol = Enum.GetName(typeof(CellValues), board.CurrentPlayer);
+                // DisplayConsoleHelper.WriteAtPosition(PlayerLabelPosition, currentPlayerSymbol + " plays");
 
-                // Player select cell
-                var playIndex = SelectTile();
-                var cellValue = board.SetValue(playIndex);
+                // // Player select cell
+                // var playIndex = SelectTile();
+                // var cellValue = board.SetValue(playIndex);
 
-                if (cellValue == 0) continue;
+                // if (cellValue == 0) continue;
 
-                // Write to cell
-                MarkTile(currentPlayerSymbol);
+                // // Write to cell
+                // MarkTile(currentPlayerSymbol);
 
-                // Check victory conditions
-                if (board.CheckWinConditions(playIndex))
-                    winner = currentPlayerSymbol;
-                else
-                    board.NextPlayer();
+                // // Check victory conditions
+                // if (board.CheckWinConditions(playIndex))
+                //     winner = currentPlayerSymbol;
+                // else
+                //     board.NextPlayer();
+                foreach (var player in players)
+                {
+                    currentPlayerSymbol = Enum.GetName(typeof(CellValues), player.Symbol);
+                    DisplayConsoleHelper.WriteAtPosition(PlayerLabelPosition, currentPlayerSymbol + " plays");
+
+                    int index = -1;
+                    int boardResult = -1;
+                    // Let player pick a tile until one is valid
+                    do
+                    {
+                        index = player.PlayTurn(board);
+                        boardResult = board.SetValue(index, player.Symbol);
+                        //DisplayConsoleHelper.WriteAtPosition(PlayerLabelPosition, currentPlayerSymbol + " plays :" + index + " ; result :" + boardResult);
+
+                    } while (boardResult == 0);
+
+                    MarkTile(currentPlayerSymbol);
+                    // MarkTile(index.ToString());
+
+                    // Check victory conditions
+                    if (board.CheckWinConditions(index)) {
+                        winner = currentPlayerSymbol;
+                        break;
+                    }
+                }
             } while (winner.Equals(string.Empty) && board.FreeCellCount > 0);
 
             // Game resolution
             if (winner.Equals(string.Empty))
-                WriteAtPosition(MessageBoxPosition, "Draw");
+                DisplayConsoleHelper.WriteAtPosition(MessageBoxPosition, "Draw");
             else
             {
-                WriteAtPosition(MessageBoxPosition, "And the winner is... : " + winner + " !");
+                DisplayConsoleHelper.WriteAtPosition(MessageBoxPosition, "And the winner is... : " + winner + " !");
                 SoundManager.Win();
             }
 
             Thread.Sleep(500);
             Console.SetCursorPosition(FooterPosition.X, FooterPosition.Y);
 
-            WriteAtPosition(FooterPosition, "-= Good Bye ! =-");
+            DisplayConsoleHelper.WriteAtPosition(FooterPosition, "-= Good Bye ! =-");
             SoundManager.GoodBye();
         }
 
         private static void InitializeLayout(int resolution)
         {
             // Title
-            TitlePosition = GetCursorPosition();
+            TitlePosition = DisplayConsoleHelper.GetCursorPosition();
             Console.WriteLine();
 
             // Player Label
-            PlayerLabelPosition = GetCursorPosition();
+            PlayerLabelPosition = DisplayConsoleHelper.GetCursorPosition();
             Console.WriteLine();
 
             // Board
             Console.WriteLine();
-            BoardOrigin = GetCursorPosition();
+            BoardOrigin = DisplayConsoleHelper.GetCursorPosition();
             for (int i = 0; i < resolution; i++)
             {
                 Console.WriteLine();
@@ -95,11 +134,11 @@ namespace T3dotnet
             Console.WriteLine();
 
             // MessageBox
-            MessageBoxPosition = GetCursorPosition();
+            MessageBoxPosition = DisplayConsoleHelper.GetCursorPosition();
             Console.WriteLine();
 
             // Footer
-            FooterPosition = GetCursorPosition();
+            FooterPosition = DisplayConsoleHelper.GetCursorPosition();
             Console.WriteLine();
         }
 
@@ -114,7 +153,7 @@ namespace T3dotnet
             do
             {
                 endTurn = false;
-                Flush();
+                DisplayConsoleHelper.Flush();
                 key = Console.ReadKey(true).Key;
                 var navOffset = new Point();
 
@@ -137,8 +176,8 @@ namespace T3dotnet
                         break;
                 }
                 Console.SetCursorPosition(
-                    Clamp(Console.CursorLeft + navOffset.X * 2, 0, BoardEnd.X - 1),
-                    Clamp(Console.CursorTop + navOffset.Y, BoardOrigin.Y, BoardEnd.Y));
+                    DisplayConsoleHelper.Clamp(Console.CursorLeft + navOffset.X * 2, 0, BoardEnd.X - 1),
+                    DisplayConsoleHelper.Clamp(Console.CursorTop + navOffset.Y, BoardOrigin.Y, BoardEnd.Y));
             }
             while (!endTurn);
             var index = GetIndexFromPosition(Console.CursorLeft, Console.CursorTop - BoardOrigin.Y);
@@ -175,32 +214,8 @@ namespace T3dotnet
 
             Console.WriteLine();
         }
-
-        private static void WriteAtPosition(Point position, string content)
-        {
-            var cursor = GetCursorPosition();
-            Console.SetCursorPosition(position.X, position.Y);
-            Flush();
-            Console.WriteLine(content);
-            Console.SetCursorPosition(cursor.X, cursor.Y);
-        }
-
         #region Helpers
-        private static void Flush()
-        {
-            while (Console.KeyAvailable)
-                Console.ReadKey(true);
-        }
 
-        private static Point GetCursorPosition()
-        {
-            return new Point(Console.CursorLeft, Console.CursorTop);
-        }
-
-        private static int GetIndexFromPosition(Point position)
-        {
-            return GetIndexFromPosition(position.X, position.Y);
-        }
 
         private static int GetIndexFromPosition(int x, int y)
         {
@@ -208,12 +223,12 @@ namespace T3dotnet
             return x / 2 + y * resolution;
         }
 
-        private static int Clamp(int value, int min, int max)
+        private static int GetIndexFromPosition(Point position)
         {
-            if (value <= min) return min;
-            if (value >= max) return max;
-            return value;
+            return GetIndexFromPosition(position.X, position.Y);
         }
+
+
         #endregion
     }
 }
