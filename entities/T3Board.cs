@@ -103,15 +103,14 @@ namespace T3dotnet
         public IEnumerable<Tile[]> GetDiagonals(int itemIndex)
         {
             var diagonals = new List<Tile[]>();
-            // Check if index on diagonal
-            for (int i = -1; i <= 1; i += 2)
-            {
-                var increment = Resolution + i;
-                var startIndex = i > 0 ? 0 : increment;
 
-                if (itemIndex % increment != 0) continue;
-                diagonals.Add(Grid.GetSequence(startIndex, Resolution, (index) => index += increment));
-            }
+            if(itemIndex > 0 
+            && itemIndex < Grid.Length-1 
+            && itemIndex % (Resolution-1) == 0) // Right To Left diagonal
+                diagonals.Add(Grid.GetSequence(Resolution-1, Resolution, (i)=>i += Resolution-1));
+
+            if(itemIndex % (Resolution+1) == 0)
+                diagonals.Add(Grid.GetSequence(0, Resolution, (i)=>i += Resolution+1));
 
             return diagonals;
         }

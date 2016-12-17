@@ -35,7 +35,7 @@ namespace T3dotnet
             // Initialize Game
             var board = new T3Board(3);
             var players = new Player[2] {
-                new AIPlayer(TileValues.X),
+                new Player(TileValues.X),
                 new AIPlayer(TileValues.O),
             };
             var currentPlayer = players[0];
