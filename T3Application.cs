@@ -17,11 +17,12 @@ namespace T3dotnet
         public T3Application()
         {
             // Console settings
-            Console.CursorSize = 90;
         }
 
         public static void Main(string[] args)
         {
+            Console.CursorSize = 90;
+            
             // Initialize layout
             InitializeLayout(3);
 
