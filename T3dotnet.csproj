@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <DebugType>portable</DebugType>
+    <AssemblyName>T3dotnet</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>T3dotnet</PackageId>
+    <RuntimeIdentifiers>win7-x64;win10-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+</Project>
